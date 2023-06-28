@@ -8,7 +8,7 @@ Includes the following dust models:
 - Power Law
 - Kriek and Conroy
 
-All dust models except Calzetti are two-component dust models where the young stars are
+All dust models except Calzetti are two-component dust models in which the young stars are
 attenuated by a power law with separate Av and power law index parameters before 
 being combined with the old stars and attenuated by the selected dust model.
 
