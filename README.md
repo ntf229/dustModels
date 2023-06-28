@@ -1,4 +1,4 @@
-### Python version of the dust models as incorporated in FSPS 
+### Python versions of the dust models used in FSPS 
 
 For all two-conponent dust models, the young stars are attenuated by a power-law
 
@@ -21,5 +21,7 @@ dustySpec, attenuationMags = dm.cardelli(wavelengths, youngSpec, oldSpec,
                              fracNoDust, fracNoDustYoung)
 ```
 
-Where dustySpec is the Cardelli attenuated version of spectrum 
+Where dustySpec is the Cardelli attenuated version of the composite spectrum youngSpec+oldSpec 
 and attenuationMags is the corresponding attenuation curve.
+
+Wavelengths should be given in Angstroms and spectra in Janskys.
