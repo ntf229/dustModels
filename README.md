@@ -16,8 +16,10 @@ This module, once added to your python path, can be used as follows:
 
 ```python 
 import dustModels as dm
-dustySpec, attenuationMags = dm.cardelli(waveFSPS, youngSpec, oldSpec, Av, mwr, uvb, AvYoung, dustIndexYoung, fracNoDust, fracNoDustYoung)
+dustySpec, attenuationMags = dm.cardelli(wavelengths, youngSpec, oldSpec,
+                             Av, mwr, uvb, AvYoung, dustIndexYoung,
+                             fracNoDust, fracNoDustYoung)
 ```
 
-Where dustySpec is the calzetti attenuated version of spectrum for the given values of Av and fracNoDust, 
+Where dustySpec is the Cardelli attenuated version of spectrum 
 and attenuationMags is the corresponding attenuation curve.
