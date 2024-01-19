@@ -1,14 +1,21 @@
 # python version of the dust models as incorporated in FSPS 
 # for all two-conponent dust models, the young stars are attenuated by a power-law
+# TEA model is fully described in "A dust attenuation model inspired by the NIHAO-SKIRT-Catalog"
 
 import numpy as np
+from scipy import special
 
 def applyAttenuation(spectrum, A, fracNoDust=0):
-	# applies attenuation A to spectrum
+	"""
+	- applies attenuation A to spectrum
+	- fracNoDust is the fraction of light that doesn't get attenuated
+	"""
 	return fracNoDust*spectrum + (1-fracNoDust)*spectrum*10**(-0.4*A)
 
 def convertToMags(spectrum):
-	# converts spectrum from Jansky to Pogson magnitudes
+	"""
+	- converts spectrum from Jansky to Pogson magnitudes
+	"""
 	return 22.5 - 2.5*np.log10((spectrum/3631) * 1e9)
 
 def calzetti(wavelengths, spectrum, Av, fracNoDust):
@@ -49,6 +56,7 @@ def cardelli(wavelengths, youngSpec, oldSpec, Av, mwr, uvb, AvYoung,
 	- fracNoDust is the fraction of yound and old stars that don't get attenuated
 	- fracNoDustYoung is the fraction of young stars that don't get attenuated
 	"""
+	dustFreeSpec = youngSpec + oldSpec
 	youngSpec = youngPowerLaw(wavelengths, youngSpec, AvYoung, dustIndexYoung, fracNoDustYoung)
 	# combine old stars with attenuated young stars
 	compositeSpec = youngSpec + oldSpec
@@ -109,7 +117,7 @@ def cardelli(wavelengths, youngSpec, oldSpec, Av, mwr, uvb, AvYoung,
 	A *= Av
 	dustySpec = applyAttenuation(compositeSpec, A, fracNoDust)
 	dustMags = convertToMags(dustySpec)
-	noDustMags = convertToMags(compositeSpec)
+	noDustMags = convertToMags(dustFreeSpec)
 	attenuationMags = dustMags - noDustMags
 	return dustySpec, attenuationMags
 
@@ -126,13 +134,14 @@ def powerLaw(wavelengths, youngSpec, oldSpec, Av, dustIndex, AvYoung,
 	- fracNoDust is the fraction of yound and old stars that don't get attenuated
 	- fracNoDustYoung is the fraction of young stars that don't get attenuated
 	"""
+	dustFreeSpec = youngSpec + oldSpec
 	youngSpec = youngPowerLaw(wavelengths, youngSpec, AvYoung, dustIndexYoung, fracNoDustYoung)
 	# combine old stars with attenuated young stars
 	compositeSpec = youngSpec + oldSpec
 	A = Av*(wavelengths/5500.)**dustIndex
 	dustySpec = applyAttenuation(compositeSpec, A, fracNoDust)
 	dustMags = convertToMags(dustySpec)
-	noDustMags = convertToMags(compositeSpec)
+	noDustMags = convertToMags(dustFreeSpec)
 	attenuationMags = dustMags - noDustMags
 	return dustySpec, attenuationMags
 
@@ -149,6 +158,7 @@ def kriekAndConroy(wavelengths, youngSpec, oldSpec, Av, dustIndex,
 	- fracNoDust is the fraction of yound and old stars that don't get attenuated
 	- fracNoDustYoung is the fraction of young stars that don't get attenuated
 	"""
+	dustFreeSpec = youngSpec + oldSpec
 	youngSpec = youngPowerLaw(wavelengths, youngSpec, AvYoung, dustIndexYoung, fracNoDustYoung)
 	compositeSpec = youngSpec + oldSpec
 	eb = 0.85 - 1.9 * dustIndex
@@ -165,7 +175,7 @@ def kriekAndConroy(wavelengths, youngSpec, oldSpec, Av, dustIndex,
 	# apply attenuation
 	dustySpec = applyAttenuation(compositeSpec, A, fracNoDust)
 	dustMags = convertToMags(dustySpec)
-	noDustMags = convertToMags(compositeSpec)
+	noDustMags = convertToMags(dustFreeSpec)
 	attenuationMags = dustMags - noDustMags
 	return dustySpec, attenuationMags
 
@@ -176,4 +186,41 @@ def youngPowerLaw(wavelengths, spectrum, Av, dustIndex, fracNoDust):
 	"""
 	A = Av*(wavelengths/5500.)**dustIndex
 	return fracNoDust*spectrum + (1-fracNoDust)*spectrum*10**(-0.4*A)
+
+def squiggle(x, center, width):
+	"""
+	- this function is called from within the TEA model
+	- smaller width parameter is more wide
+	"""
+	return -1*((width*(np.log10(x)-np.log10(center)))**5 / (((width*(np.log10(x)-np.log10(center)))**4 + 1))) + width*(np.log10(x)-np.log10(center))
+
+def skewBump(x, center, width, alpha):
+	"""
+	- this function is called from within the TEA model
+	- larger width parameter is steeper
+	"""
+	bump = (1+(width*(np.log10(x)-np.log10(center)))**2)**(-3/2)
+	skew = (1+special.erf((np.log10(x)-np.log10(center))*alpha))
+	return bump*skew
+
+def TEA(wavelengths, spec, Av, dustIndex, bumpStrength):
+	"""
+	- old and young stars treated together
+	- wavelengths in Angstroms
+	- spec in Jansky
+	- Av (attenuation in the V-band) in magnitudes
+	- dustIndex is the power law index
+	- bumpStrength controls the 2175A UV-bump strength 
+	"""
+	fracNoDust = 0
+	bumpSkew = 6.95
+	A = Av*(wavelengths/5500.)**dustIndex
+	A += bumpStrength * skewBump(wavelengths, 2050, 6, bumpSkew)
+	A += bumpStrength/4 * squiggle(wavelengths, 10**3.285, 16)
+	dustySpec = applyAttenuation(spec, A, fracNoDust)
+	dustMags = convertToMags(dustySpec)
+	noDustMags = convertToMags(spec)
+	attenuationMags = dustMags - noDustMags
+	return dustySpec, attenuationMags
+
 
