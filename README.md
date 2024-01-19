@@ -1,14 +1,13 @@
-### Python versions of the dust models used in FSPS 
-
-For all two-conponent dust models, the young stars are attenuated by a power-law
+### Python versions of dust attenuation models
 
 Includes the following dust models:
 - Calzetti
 - Cardelli (MW extinction)
 - Power Law
 - Kriek and Conroy
+- TEA
 
-All dust models except Calzetti are two-component dust models in which the young stars are
+All dust models except Calzetti and TEA are two-component dust models in which the young stars are
 attenuated by a power law with separate Av and power law index parameters before 
 being combined with the old stars and attenuated by the selected dust model.
 
